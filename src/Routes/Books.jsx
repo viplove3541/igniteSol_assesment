@@ -7,16 +7,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getBookData } from "../Utils/Services"; //pending
+import { getBookData } from "../Utils/Services"; // Ensure this is correctly implemented
 import InfiniteScroll from "react-infinite-scroll-component";
 import BookCard from "../Components/BookCard";
 import { ReactComponent as Back } from "../assets/Images/Back.svg";
 import { Search, Close } from "@mui/icons-material";
 
 const Books = () => {
-  //states
+  // States
   const [page, setPage] = useState(1);
   const [bookList, setBookList] = useState([]);
   const [hasMore, setHasMore] = useState(true);
@@ -24,27 +24,27 @@ const Books = () => {
 
   const navigate = useNavigate();
 
-  // get prameters from URL
+  // Get parameters from URL
   const urlSearchParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(urlSearchParams.entries());
 
-  useEffect(() => {
-    //get data on load
-    getData();
-  });
+  const bindBooks = useCallback(
+    (res) => {
+      if (res.results.length > 0) {
+        setPage((prevPage) => prevPage + 1);
+        setBookList((prevList) =>
+          searchText ? res.results : prevList.concat(res.results)
+        );
+        setHasMore(res.count > bookList.length + res.results.length);
+      } else {
+        setHasMore(false);
+      }
+    },
+    [bookList.length, searchText]
+  );
 
-  useEffect(() => {
-    // get data again on search text change
-    if (searchText === "") {
-      setBookList([]);
-    }
-
-    getData();
-  }, [searchText]);
-
-  const getData = () => {
+  const getData = useCallback(() => {
     if (searchText !== "") {
-      //search with url
       getBookData(
         `?topic=${params.topic}&search=${searchText.replace(
           / /g,
@@ -53,55 +53,39 @@ const Books = () => {
         bindBooks
       );
     } else {
-      // without search
       getBookData(
         `?topic=${params.topic}&page=${page}&mime_type=image/jpeg`,
         bindBooks
       );
     }
-  };
+  }, [searchText, page, params.topic, bindBooks]);
 
-  const bindBooks = (res) => {
-    // bind books only if data available
-    if (res.results.length > 0) {
-      setPage(page + 1); //increase page size to load next page
-
-      setBookList(searchText ? res.results : bookList.concat(res.results)); // search text available then direct assign searched data else concat it.
-      setHasMore(res.count > bookList.length + res.results.length);
-    }
-  };
+  useEffect(() => {
+    getData();
+  }, [getData]);
 
   const openBook = (id, url) => {
-    let keys = Object.keys(url);
+    const keys = Object.keys(url);
+    let selectedKey = keys.find((key) => key.includes("html"));
 
-    let selectedKey = "";
-    selectedKey = keys.filter((key, index) => {
-      return key.indexOf("html") > -1;
-    });
-
-    if (selectedKey.length === 0) {
-      selectedKey = keys.filter((key, index) => {
-        return key.indexOf("text") > -1;
-      });
-
-      if (selectedKey.length === 0) {
-        selectedKey = keys.filter((key, index) => {
-          return key.indexOf("/zip") > -1;
-        });
-      }
+    if (!selectedKey) {
+      selectedKey = keys.find((key) => key.includes("text"));
     }
 
-    window.location.href = url[selectedKey];
+    if (!selectedKey) {
+      selectedKey = keys.find((key) => key.includes("/zip"));
+    }
+
+    if (selectedKey) {
+      window.location.href = url[selectedKey];
+    }
   };
 
   const searchBook = () => {
     setPage(1);
     setHasMore(false);
     setBookList([]);
-    // can be uncommented to reduce the API calling
-    //setTimeout(() => {
     getData();
-    //}, 1000);
   };
 
   const clearSearch = () => {
@@ -152,14 +136,10 @@ const Books = () => {
                   }}
                 />
               </InputAdornment>
-            ) : (
-              <></>
-            )
+            ) : null
           }
           placeholder="Search"
-          onKeyUp={() => {
-            searchBook();
-          }}
+          onKeyUp={searchBook}
           onChange={(e) => {
             setSearchText(e.target.value);
           }}
@@ -184,7 +164,7 @@ const Books = () => {
             endMessage={
               <Box my={4}>
                 <Typography mb={1} variant="h6" textAlign={"center"}>
-                  That's All !
+                  That's All!
                 </Typography>
                 <Link className="Back" to={`/`}>
                   <Back />
@@ -194,13 +174,10 @@ const Books = () => {
           >
             <Grid container>
               {bookList.map((book, index) => (
-                <Grid item xs={4} sm={3} md={3} lg={2} xl={2}>
+                <Grid item xs={4} sm={3} md={3} lg={2} xl={2} key={index}>
                   <BookCard
                     id={book.id}
-                    onPress={(id, url) => {
-                      openBook(id, url);
-                    }}
-                    key={index}
+                    onPress={openBook}
                     url={book.formats}
                     image={book.formats["image/jpeg"]}
                     author={book.authors[0] ? book.authors[0]["name"] : ""}
@@ -212,11 +189,12 @@ const Books = () => {
           </InfiniteScroll>
         ) : (
           <Typography variant="h6" textAlign={"center"} my={5}>
-            {searchText ? "No Results Found !" : "Loading Books..."}
+            {searchText ? "No Results Found!" : "Loading Books..."}
           </Typography>
         )}
       </Box>
     </Container>
   );
 };
+
 export default Books;

@@ -23,11 +23,7 @@ const BookCard = ({
         onPress(id, url);
       }}
     >
-      <Button
-        onClick={() => {
-          onPress(id, url);
-        }}
-      >
+      <Button>
         <Box
           justifyContent={"center"}
           alignItems={"center"}
@@ -37,7 +33,7 @@ const BookCard = ({
         >
           <Box className="book" display={"flex"} flexDirection={"column"}>
             <Box className="Rectangle">
-              <img src={image} height={"100%"} width={"100%"} />
+              <img src={image} alt={title} height={"100%"} width={"100%"} />
             </Box>
             <Typography
               title={title}
