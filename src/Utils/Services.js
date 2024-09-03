@@ -1,9 +1,8 @@
-// ** Axios
 import axios from "axios";
 import { baseURL } from "./EndPoints";
 
 export const getBookData = (params, callback) => {
-  axios
+  return axios
     .get(baseURL + "books/" + params)
     .then((res) => {
       if (res) {

@@ -19,9 +19,7 @@ const BookCard = ({
       }}
       my={2}
       mx={"auto"}
-      onClick={() => {
-        onPress(id, url);
-      }}
+      onClick={() => onPress(id, url)}
     >
       <Button>
         <Box

@@ -2,9 +2,9 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./Styles/Common.css";
 import "./Styles/Theme.css";
-import Home from "./Routes/Home";
-import Books from "./Routes/Books";
-import ReadBook from "./Routes/ReadBook";
+import Home from "./Pages/Home";
+import Books from "./Pages/Books";
+import ReadBook from "./Pages/ReadBook";
 
 const App = () => {
   return (
